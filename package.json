@@ -1,0 +1,25 @@
+{
+  "name": "drivingschool",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/amarnadh777/DrivingSchoolAccounts#readme",
+  "bugs": {
+    "url": "https://github.com/amarnadh777/DrivingSchoolAccounts/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amarnadh777/DrivingSchoolAccounts.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "mongoose": "^8.17.1"
+  }
+}
