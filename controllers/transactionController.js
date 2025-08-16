@@ -6,7 +6,7 @@ const Category = require("../models/categoryModel");/**
  */
 exports.createTransaction = async (req, res) => {
   try {
-    const { type, categoryName, amount, paymentMethod, description, date, receiptImage } = req.body;
+    const { type, categoryName, amount, paymentMethod, description, date } = req.body;
 
     // ✅ 1. Validate type
     if (!["income", "expense"].includes(type)) {
@@ -24,7 +24,13 @@ exports.createTransaction = async (req, res) => {
       await category.save();
     }
 
-    // ✅ 3. Create transaction
+    // ✅ 3. Get secure URL from Cloudinary upload
+    let receiptImage = null;
+    if (req.file) {
+      receiptImage = req.file.path; // 👈 secure_url from Cloudinary
+    }
+
+    // ✅ 4. Create transaction
     const transaction = new Transaction({
       type,
       category: category._id,
@@ -32,7 +38,7 @@ exports.createTransaction = async (req, res) => {
       paymentMethod,
       description,
       date,
-      receiptImage,
+      receiptImage, // 👈 stored as secure_url
       user: req.user?._id, // from auth middleware
     });
 
