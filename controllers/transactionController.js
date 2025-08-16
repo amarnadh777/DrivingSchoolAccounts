@@ -150,3 +150,82 @@ exports.createCategory = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+
+exports.editCategory = async (req, res) => {
+  try {
+    const { id } = req.params; // category id from URL
+    const { name, type } = req.body;
+
+    // Validate inputs
+    if (!name && !type) {
+      return res.status(400).json({ message: "At least one field (name or type) must be provided" });
+    }
+
+    // Validate type if provided
+    if (type && !["income", "expense"].includes(type.toLowerCase())) {
+      return res.status(400).json({ message: "Type must be 'income' or 'expense'" });
+    }
+
+    // Check if category exists
+    let category = await Category.findById(id);
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    // Check duplicate (only if name/type are changing)
+    if (name || type) {
+      const duplicate = await Category.findOne({
+        _id: { $ne: id }, // exclude current category
+        name: name ? name.trim().toLowerCase() : category.name.toLowerCase(),
+        type: type ? type.toLowerCase() : category.type,
+      });
+
+      if (duplicate) {
+        return res.status(400).json({ message: "Category with same name and type already exists" });
+      }
+    }
+
+    // Update fields
+    if (name) category.name = name.trim();
+    if (type) category.type = type.toLowerCase();
+
+    await category.save();
+
+    res.status(200).json({
+      message: "Category updated successfully",
+      category,
+    });
+  } catch (error) {
+    console.error("Error updating category:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+// Delete Category
+exports.deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID
+    if (!id) {
+      return res.status(400).json({ message: "Category ID is required" });
+    }
+
+    const deletedCategory = await Category.findByIdAndDelete(id);
+
+    if (!deletedCategory) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+
+    res.status(200).json({
+      message: "Category deleted successfully",
+      deletedCategory,
+    });
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

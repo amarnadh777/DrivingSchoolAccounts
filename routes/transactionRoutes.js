@@ -6,6 +6,10 @@ const router = expres.Router()
 router.post('/', upload.single("receiptImage"),transactionController.createTransaction)
 router.get('/categories', transactionController.getCategories)
 router.post('/categories', transactionController.createCategory)
+router.patch('/categories/:id', transactionController.editCategory)
+router.delete('/categories/:id', transactionController.deleteCategory)
+
+
 
 
 
