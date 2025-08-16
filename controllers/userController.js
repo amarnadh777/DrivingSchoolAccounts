@@ -3,38 +3,68 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
 
 const jwt = require("jsonwebtoken");
+
+
 exports.register = async (req, res) => {
   try {
     const { fullname, username, email, phone, password } = req.body;
 
-    // 1. Validate input
+    // 1. Basic field validation
     if (!fullname || !username || !email || !phone || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    // 2. Check if email already exists
+    // 2. Email validation (format)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // 3. Phone validation (10 digits, only numbers — adjust for your country)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone)) {
+      return res
+        .status(400)
+        .json({ message: "Phone number must be 10 digits" });
+    }
+
+    // 4. Password validation (min 6 chars, at least 1 number)
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long" });
+    }
+    // const strongPassword = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+    // if (!strongPassword.test(password)) {
+    //   return res.status(400).json({
+    //     message:
+    //       "Password must contain at least 1 letter and 1 number",
+    //   });
+    // }
+
+    // 5. Check if email already exists
     const existingEmail = await User.findOne({ email });
     if (existingEmail) {
       return res.status(400).json({ message: "Email already registered" });
     }
 
-    // 3. Check if username already exists
+    // 6. Check if username already exists
     const existingUsername = await User.findOne({ username });
     if (existingUsername) {
       return res.status(400).json({ message: "Username already taken" });
     }
 
-    // 4. Check if phone already exists
+    // 7. Check if phone already exists
     const existingPhone = await User.findOne({ phone });
     if (existingPhone) {
       return res.status(400).json({ message: "Phone number already registered" });
     }
 
-    // 5. Hash password
+    // 8. Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 6. Create new user
+    // 9. Create new user
     const newUser = new User({
       fullname,
       username,
@@ -45,7 +75,7 @@ exports.register = async (req, res) => {
 
     await newUser.save();
 
-    // 7. Response (exclude password)
+    // 10. Response (exclude password)
     res.status(201).json({
       message: "User registered successfully",
       user: {
@@ -86,7 +116,7 @@ exports.login = async (req, res) => {
     // 3. Compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      return res.status(400).json({ message: "Invalid credentialsssss" });
     }
 
     // 4. Generate JWT
