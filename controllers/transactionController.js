@@ -79,3 +79,26 @@ exports.deleteTransaction = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+
+exports.getCategories = async (req, res) => {
+  try {
+    const { type } = req.query; // optional filter: income | expense
+
+    let query = {};
+    if (type && ["income", "expense"].includes(type)) {
+      query.type = type;
+    }
+
+    const categories = await Category.find(query).sort({ name: 1 });
+
+    res.status(200).json({
+      message: "Categories fetched successfully",
+      categories,
+    });
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
