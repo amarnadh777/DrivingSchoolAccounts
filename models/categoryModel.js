@@ -1,20 +1,27 @@
 const mongoose = require("mongoose");
 
-const categorySchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true
-    },
-    type: {
-      type: String,
-      enum: ["income", "expense"], // Categories are tied to either income or expense
-      required: true
-    }
+const CategorySchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    trim: true,
   },
-  { timestamps: true }
-);
+  type: {
+    type: String,
+    enum: ["income", "expense"],
+    required: true,
+  }
+});
 
-module.exports = mongoose.model("Category", categorySchema);
+// 🔑 Unique index on lowercase(name) + type
+CategorySchema.index({ name: 1, type: 1 }, { unique: true });
+
+// Always store lowercase version
+CategorySchema.pre("save", function (next) {
+  if (this.name) {
+    this.name = this.name.trim().toLowerCase();
+  }
+  next();
+});
+
+module.exports = mongoose.model("Category", CategorySchema);
