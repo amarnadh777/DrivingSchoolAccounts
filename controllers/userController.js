@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
 const bcrypt = require("bcryptjs");
+const User = require("../models/userModel");
 
-
+const jwt = require("jsonwebtoken");
 exports.register = async (req, res) => {
   try {
     const { fullname, username, email, phone, password } = req.body;
@@ -58,6 +59,58 @@ exports.register = async (req, res) => {
     });
   } catch (error) {
     console.error("Register error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+exports.login = async (req, res) => {
+  try {
+    const { emailOrUsername, password } = req.body;
+
+    // 1. Validate input
+    if (!emailOrUsername || !password) {
+      return res.status(400).json({ message: "Email/Username and password are required" });
+    }
+
+    // 2. Find user by email or username
+    const user = await User.findOne({
+      $or: [{ email: emailOrUsername }, { username: emailOrUsername }],
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // 3. Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // 4. Generate JWT
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" } // token expires in 7 days
+    );
+
+    // 5. Response (exclude password)
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        fullname: user.fullname,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        isAdmin: user.isAdmin,
+      },
+    });
+  } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
