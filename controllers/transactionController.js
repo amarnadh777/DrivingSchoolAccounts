@@ -1,34 +1,39 @@
-const Transaction = require("../models/Transaction");
-const Category = require("../models/Category");/**
+const Transaction = require("../models/TransactionModel");
+const Category = require("../models/categoryModel");/**
  * @desc    Create a new transaction
  * @route   POST /api/transactions
  * @access  Private (authenticated user)
  */
 exports.createTransaction = async (req, res) => {
   try {
-    const { type, category, amount, paymentMethod, description, date, receiptImage } = req.body;
+    const { type, categoryName, amount, paymentMethod, description, date, receiptImage } = req.body;
 
-    // Validation: type should be income or expense
+    // ✅ 1. Validate type
     if (!["income", "expense"].includes(type)) {
       return res.status(400).json({ message: "Invalid transaction type" });
     }
 
-    // Validation: check category exists
-    const categoryExists = await Category.findById(category);
-    if (!categoryExists) {
-      return res.status(400).json({ message: "Category not found" });
+    // ✅ 2. Find or create category by name
+    let category = await Category.findOne({ name: categoryName.trim().toLowerCase(), type });
+
+    if (!category) {
+      category = new Category({
+        name: categoryName.trim(),
+        type,
+      });
+      await category.save();
     }
 
-    // Create new transaction
+    // ✅ 3. Create transaction
     const transaction = new Transaction({
       type,
-      category,
+      category: category._id,
       amount,
       paymentMethod,
       description,
       date,
       receiptImage,
-      user: req.user?._id, // comes from auth middleware (JWT session)
+      user: req.user?._id, // from auth middleware
     });
 
     await transaction.save();
@@ -36,6 +41,7 @@ exports.createTransaction = async (req, res) => {
     res.status(201).json({
       message: "Transaction created successfully",
       transaction,
+      category, // return category so UI can cache/update
     });
   } catch (error) {
     console.error("Error creating transaction:", error);

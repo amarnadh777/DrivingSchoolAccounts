@@ -5,6 +5,7 @@ const dotenv = require('dotenv').config()
 const connectDB = require('./config/db')
 
 const userRoutes = require('./routes/userRoutes')
+const transactionRoutes = require('./routes/transactionRoutes')
 
 
 app.use(expres.json())
@@ -13,7 +14,7 @@ connectDB()
 
 app.use("/api/user", userRoutes)
 
-
+app.use("/api/transaction", transactionRoutes) 
 
 
 
