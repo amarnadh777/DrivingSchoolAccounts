@@ -108,3 +108,45 @@ exports.getCategories = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+
+exports.createCategory = async (req, res) => {
+  try {
+    const { name, type } = req.body;
+
+    // Validate inputs
+    if (!name || !type) {
+      return res.status(400).json({ message: "Name and type are required" });
+    }
+
+    if (!["income", "expense"].includes(type.toLowerCase())) {
+      return res.status(400).json({ message: "Type must be 'income' or 'expense'" });
+    }
+
+    // Check if category already exists
+    let existingCategory = await Category.findOne({
+      name: name.trim().toLowerCase(),
+      type: type.toLowerCase(),
+    });
+
+    if (existingCategory) {
+      return res.status(400).json({ message: "Category already exists" });
+    }
+
+    // Create category
+    const category = new Category({
+      name: name.trim(),
+      type: type.toLowerCase(),
+    });
+
+    await category.save();
+
+    res.status(201).json({
+      message: "Category created successfully",
+      category,
+    });
+  } catch (error) {
+    console.error("Error creating category:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
